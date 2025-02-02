@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8"> <!-- 设置文档的字符编码为UTF-8 -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- 设置视口的宽度和缩放比例 -->
-    <title>Virtual Browser</title> <!-- 设置网页标题 -->
+    <title>虚拟浏览器</title> <!-- 设置网页标题 -->
+    <link rel="icon" href="https://ts4.cn.mm.bing.net/th?id=ODLS.a3097c96-5ad2-4065-96c9-624226a1320f&w=32&h=32&qlt=90&pcl=fffffa&o=6&pid=1.2" type="imgs/png">
     <style>
         body, html {
             margin: 0; /* 去除默认的外边距 */
@@ -80,7 +81,7 @@
             <button class="platform-button" data-platform="macos">macOS</button> <!-- macOS 按钮 -->
         </div>
         <div class="address-bar">
-            <input type="text" id="url-input" placeholder="Enter URL here"> <!-- URL 输入框 -->
+            <input type="text" id="url-input" placeholder="输入网址/URL"> <!-- URL 输入框 -->
             <button id="go-button">加载</button> <!-- Go 按钮 -->
         </div>
         <iframe id="browser-frame" src="about:blank" sandbox="allow-scripts allow-same-origin allow-forms"></iframe> <!-- 浏览器框架 -->
@@ -124,7 +125,7 @@
                         break;
                 }
             }
-            urlInput.value = ''; // 清空 URL 输入框
+            //urlInput.value = ''; // 清空 URL 输入框
             browserFrame.src = url; // 设置浏览器框架的 src 属性为 URL
         }
 
