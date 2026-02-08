@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>语音转文字 - 会议记录神器</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: white;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+        .subtitle {
+            color: rgba(255,255,255,0.8);
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+        }
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        #startBtn {
+            background: #4CAF50;
+            color: white;
+        }
+        #startBtn:hover {
+            background: #45a049;
+        }
+        #startBtn.recording {
+            background: #f44336;
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        #clearBtn {
+            background: #ff9800;
+            color: white;
+        }
+        #copyBtn {
+            background: #2196F3;
+            color: white;
+        }
+        #exportBtn {
+            background: #9c27b0;
+            color: white;
+        }
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        #status {
+            text-align: center;
+            padding: 10px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            font-weight: 500;
+        }
+        .status-idle {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+        .status-recording {
+            background: #ffebee;
+            color: #c62828;
+        }
+        textarea {
+            width: 100%;
+            height: 300px;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            line-height: 1.6;
+            resize: vertical;
+            font-family: inherit;
+        }
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        .info {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f5f5f5;
+            border-radius: 8px;
+            font-size: 14px;
+            color: #666;
+        }
+        .info strong {
+            color: #333;
+        }
+        .word-count {
+            text-align: right;
+            margin-top: 10px;
+            color: #999;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎙️ 语音转文字</h1>
+        <p class="subtitle">基于 Web Speech API | 完全离线可用 | 无需 API 密钥</p>
+
+        <div class="card">
+            <div class="controls">
+                <button id="startBtn">🎤 开始录音</button>
+                <button id="clearBtn">🗑️ 清空</button>
+                <button id="copyBtn">📋 复制</button>
+                <button id="exportBtn">💾 导出 .txt</button>
+            </div>
+
+            <div id="status" class="status-idle">点击"开始录音"即可转写语音</div>
+
+            <textarea id="result" placeholder="录音内容将显示在这里..."></textarea>
+            <div class="word-count">字数：<span id="wordCount">0</span></div>
+
+            <div class="info">
+                <strong>使用说明：</strong><br>
+                1. 推荐使用 Chrome 或 Edge 浏览器（支持中文语音识别）<br>
+                2. 点击"开始录音"后开始说话<br>
+                3. 再次点击按钮停止录音<br>
+                4. 支持一键复制和导出文本文件<br>
+                5. 完全离线运行，保护隐私
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const startBtn = document.getElementById('startBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const copyBtn = document.getElementById('copyBtn');
+        const exportBtn = document.getElementById('exportBtn');
+        const result = document.getElementById('result');
+        const status = document.getElementById('status');
+        const wordCount = document.getElementById('wordCount');
+
+        let recognition = null;
+        let isRecording = false;
+        let finalTranscript = '';
+
+        // 检查浏览器是否支持 Web Speech API
+        if ('webkitSpeechRecognition' in window) {
+            recognition = new webkitSpeechRecognition();
+        } else if ('SpeechRecognition' in window) {
+            recognition = new SpeechRecognition();
+        } else {
+            status.textContent = '❌ 您的浏览器不支持语音识别，请使用 Chrome 或 Edge';
+            status.className = 'status-idle';
+            startBtn.disabled = true;
+        }
+
+        if (recognition) {
+            // 配置识别器
+            recognition.continuous = true;
+            recognition.interimResults = true;
+            recognition.lang = 'zh-CN';
+
+            recognition.onstart = () => {
+                isRecording = true;
+                startBtn.textContent = '⏹️ 停止录音';
+                startBtn.classList.add('recording');
+                status.textContent = '🔴 正在监听...请开始说话';
+                status.className = 'status-recording';
+            };
+
+            recognition.onend = () => {
+                if (isRecording) {
+                    recognition.start(); // 保持连续识别
+                } else {
+                    startBtn.textContent = '🎤 开始录音';
+                    startBtn.classList.remove('recording');
+                    status.textContent = '✅ 录音已停止';
+                    status.className = 'status-idle';
+                }
+            };
+
+            recognition.onresult = (event) => {
+                let interimTranscript = '';
+                for (let i = event.resultIndex; i < event.results.length; i++) {
+                    if (event.results[i].isFinal) {
+                        finalTranscript += event.results[i][0].transcript;
+                    } else {
+                        interimTranscript += event.results[i][0].transcript;
+                    }
+                }
+                result.value = finalTranscript + interimTranscript;
+                wordCount.textContent = result.value.length;
+            };
+
+            recognition.onerror = (event) => {
+                console.error('语音识别错误:', event.error);
+                if (event.error === 'not-allowed') {
+                    status.textContent = '❌ 请允许麦克风权限';
+                } else {
+                    status.textContent = '⚠️ 识别出错: ' + event.error;
+                }
+            };
+
+            // 按钮事件
+            startBtn.addEventListener('click', () => {
+                if (isRecording) {
+                    isRecording = false;
+                    recognition.stop();
+                } else {
+                    finalTranscript = result.value;
+                    recognition.start();
+                }
+            });
+
+            clearBtn.addEventListener('click', () => {
+                result.value = '';
+                finalTranscript = '';
+                wordCount.textContent = '0';
+            });
+
+            copyBtn.addEventListener('click', async () => {
+                if (result.value) {
+                    try {
+                        await navigator.clipboard.writeText(result.value);
+                        const originalText = copyBtn.textContent;
+                        copyBtn.textContent = '✅ 已复制!';
+                        setTimeout(() => copyBtn.textContent = originalText, 2000);
+                    } catch (err) {
+                        result.select();
+                        document.execCommand('copy');
+                    }
+                }
+            });
+
+            exportBtn.addEventListener('click', () => {
+                if (result.value) {
+                    const blob = new Blob([result.value], { type: 'text/plain;charset=utf-8' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `语音转文字_${new Date().toLocaleString().replace(/[/:]/g, '-')}.txt`;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                }
+            });
+        }
+    </script>
+</body>
+</html>
