@@ -1,140 +1,214 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8"> <!-- 设置文档的字符编码为UTF-8 -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- 设置视口的宽度和缩放比例 -->
-    <title>虚拟浏览器</title> <!-- 设置网页标题 -->
-    <link rel="icon" href="https://ts4.cn.mm.bing.net/th?id=ODLS.a3097c96-5ad2-4065-96c9-624226a1320f&w=32&h=32&qlt=90&pcl=fffffa&o=6&pid=1.2" type="imgs/png">
-    <style>
-        body, html {
-            margin: 0; /* 去除默认的外边距 */
-            padding: 0; /* 去除默认的内边距 */
-            height: 100%; /* 设置高度为100% */
-            font-family: Arial, sans-serif; /* 设置字体 */
-        }
-        .browser-container {
-            display: flex; /* 使用弹性布局 */
-            flex-direction: row; /* 横向排列子元素 */
-            height: 50px; /* 设置高度为视口高度 */
-            max-width: 1200px; /* 最大宽度为1200px */
-            margin: 0 auto; /* 水平居中 */
-            box-shadow: 0 0 10px rgba(0,0,0,0.1); /* 添加阴影效果 */
-        }
-        .address-bar {
-            display: flex; /* 使用弹性布局 */
-            padding: 10px; /* 内边距为10px */
-            background-color: #f1f3f4; /* 背景颜色 */
-        }
-        #url-input {
-            flex-grow: 1; /* 占据剩余空间 */
-            padding: 8px; /* 内边距为8px */
-            font-size: 16px; /* 字体大小 */
-            border: 1px solid #ccc; /* 边框 */
-            border-radius: 4px 0 0 4px; /* 圆角边框 */
-        }
-        #go-button {
-            padding: 8px 16px; /* 内边距 */
-            font-size: 16px; /* 字体大小 */
-            background-color: #4285f4; /* 背景颜色 */
-            color: white; /* 字体颜色 */
-            border: none; /* 无边框 */
-            border-radius: 0 4px 4px 0; /* 圆角边框 */
-            cursor: pointer; /* 鼠标指针样式 */
-        }
-        #go-button:hover {
-            background-color: #3367d6; /* 悬停时的背景颜色 */
-        }
-        #browser-frame {
-            flex-grow: 1; /* 占据剩余空间 */
-            border: none; /* 无边框 */
-        }
-        .platform-buttons {
-            display: flex; /* 使用弹性布局 */
-            gap: 5px; /* 元素间距 */
-            margin-bottom: 5px; /* 下外边距 */
-        }
-        .platform-button {
-            padding: 5px 10px; /* 内边距 */
-            font-size: 14px; /* 字体大小 */
-            background-color: #e0e0e0; /* 背景颜色 */
-            color: #333; /* 字体颜色 */
-            border: none; /* 无边框 */
-            border-radius: 4px; /* 圆角边框 */
-            cursor: pointer; /* 鼠标指针样式 */
-        }
-        .platform-button:hover {
-            background-color: #ccc; /* 悬停时的背景颜色 */
-        }
-        .platform-button.active {
-            background-color: #4285f4; /* 激活状态的背景颜色 */
-            color: white; /* 激活状态的字体颜色 */
-        }
-    </style>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<title>在线时钟-在线时钟显示-北京时间在线时钟秒表-抖音网红热门时钟</title>
+<meta name="keywords" content="在线时钟,在线时钟显示,在线钟表,时间大屏,时钟大屏,北京时间,在线时间显示,抖音网红热门时钟" />
+<meta name="description" content="在线时钟显示为您提供最新的北京时间,实现在线网页闹钟功能,打开即用。附带整点报时、北京时间、经典铃音、一键快速设置等特色功能。" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<script src="js/jquery.min.js"></script>
+<script src="js/test.js"></script>
+<script src="js/common.js"></script>
+<script src="js/config.js"></script>
+
 </head>
+
+<style>
+
+	*{
+		margin: 0;
+		padding: 0;
+	}
+
+	body{
+		background-attachment: fixed;
+		color: #F5F4F6;
+		font-size: 12px;
+		font-weight: bold;
+		overflow: hidden;
+		width: 1000px;
+		height: 900px;
+		font-family: "微软雅黑";
+		background-color: #F5F4F6;
+		
+	}
+
+	audio{
+		position: absolute;
+		right: 0;
+		opacity: 0.1;
+		transition: all 1s;
+		
+	}
+
+	audio:hover{
+		opacity: 1;
+	}
+
+	.current{
+		color: #D1A3F7;
+	}
+
+
+	video{
+		z-index: -1;
+		/* object-fit: fill; */
+		position: fixed;
+		/* right: 0px;
+		bottom: 0px; */
+		min-width: 100%;
+		min-height: 100%;
+		/* height: auto;
+		width: auto; */
+	}
+
+
+	.main-content{
+		position: absolute; 
+		top:50%;
+		left: 50%;
+	}
+
+
+	.main-content .year{
+		position: relative;
+		top: -13px;
+		left: -38px;
+		text-align: center
+	}
+
+	.main-content .year span{
+		position: absolute;
+		width: 80px;
+	}
+
+
+
+	.main-content .month{
+		position: relative;
+		top: -13px;
+		left: 40px;
+	}
+
+	.month span{
+		position: absolute;
+		width: 60px;
+		
+	}
+
+
+
+
+	.main-content .day{
+		position: relative;
+		top: -13px;
+		left: 85px;
+	}
+
+	.day span{
+		position: absolute;
+		width: 65px;
+		
+	}
+
+
+
+
+	.main-content .week{
+		position: relative;
+		top: -13px;
+		left: 145px;
+	}
+	.week span{
+		position: absolute;
+		width: 65px;
+		
+	}
+
+
+	.main-content .shichen{
+		position: relative;
+		top: -13px;
+		left: 200px;
+	}
+	.shichen span{
+		position: absolute;
+		width: 125px;
+		
+	}
+
+
+	.main-content .hour{
+		position: relative;
+		top: -13px;
+		left: 240px;
+	}
+	.hour span{
+		position: absolute;
+		width: 60px;
+		
+	}
+
+
+	.main-content .minute{
+		position: relative;
+		top: -13px;
+		left: 300px;
+	}
+	.minute span{
+		position: absolute;
+		width: 60px;
+		
+	}
+
+
+	.main-content .second{
+		position: relative;
+		top: -13px;
+		left: 370px;
+	}
+	.second span{
+		position: absolute;
+		width: 60px;
+		
+	}
+
+.tzs-text{font:20px Avenir Next,Helvetica,Arial,sans-serif;color:white;}
+#rig{
+width: 150px;
+height: 30px;
+background: #3c3e40;
+position: absolute;
+top: 20px;
+right: 20px;
+text-align: center;
+border-radius: 4px;
+}
+</style>
+
 <body>
-    <div class="browser-container">
-        <div class="platform-buttons"></div> <!-- 平台按钮容器 -->
-            <button class="platform-button" data-platform="windows-edge">Windows (Edge)</button> <!-- Windows Edge 按钮 -->
-            <button class="platform-button" data-platform="windows-chrome">Windows (Chrome)</button> <!-- Windows Chrome 按钮 -->
-            <button class="platform-button" data-platform="android">Android</button> <!-- Android 按钮 -->
-            <button class="platform-button" data-platform="iphone">iPhone</button> <!-- iPhone 按钮 -->
-            <button class="platform-button" data-platform="macos">macOS</button> <!-- macOS 按钮 -->
-        </div>
-        <div class="address-bar">
-            <input type="text" id="url-input" placeholder="输入网址/URL"> <!-- URL 输入框 -->
-            <button id="go-button">加载</button> <!-- Go 按钮 -->
-        </div>
-        <iframe id="browser-frame" src="about:blank" sandbox="allow-scripts allow-same-origin allow-forms"></iframe> <!-- 浏览器框架 -->
-    </div>
-
-    <script>
-        const urlInput = document.getElementById('url-input'); // 获取 URL 输入框元素
-        const goButton = document.getElementById('go-button'); // 获取 Go 按钮元素
-        const browserFrame = document.getElementById('browser-frame'); // 获取浏览器框架元素
-        const platformButtons = document.querySelectorAll('.platform-button'); // 获取所有平台按钮元素
-
-        let currentPlatform = null; // 当前选择的平台
-
-        platformButtons.forEach(button => {
-            button.addEventListener('click', function() {
-                platformButtons.forEach(btn => btn.classList.remove('active')); // 移除所有按钮的激活状态
-                this.classList.add('active'); // 添加当前按钮的激活状态
-                currentPlatform = this.dataset.platform; // 设置当前选择的平台
-            });
-        });
-
-        function loadUrl() {
-            let url = urlInput.value.trim(); // 获取并去除 URL 输入框的值的空白字符
-            if (!url.startsWith('http://') && !url.startsWith('https://')) {
-                url = 'https://' + url; // 如果 URL 没有以 http:// 或 https:// 开头，则添加 https://
-            }
-            if (currentPlatform) {
-                console.log(`Loading URL in ${currentPlatform}: ${url}`); // 在控制台输出当前平台和 URL
-                switch (currentPlatform) {
-                    case 'android':
-                        browserFrame.style.width = '360px'; // 设置 Android 平台的宽度
-                        browserFrame.style.height = '640px'; // 设置 Android 平台的高度
-                        break;
-                    case 'iphone':
-                        browserFrame.style.width = '375px'; // 设置 iPhone 平台的宽度
-                        browserFrame.style.height = '667px'; // 设置 iPhone 平台的高度
-                        break;
-                    default:
-                        browserFrame.style.width = '100%'; // 设置默认平台的宽度
-                        browserFrame.style.height = '100%'; // 设置默认平台的高度
-                        break;
-                }
-            }
-            //urlInput.value = ''; // 清空 URL 输入框
-            browserFrame.src = url; // 设置浏览器框架的 src 属性为 URL
-        }
-
-        goButton.addEventListener('click', loadUrl); // 为 Go 按钮添加点击事件监听器
-        urlInput.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                loadUrl(); // 如果按下 Enter 键，则加载 URL
-            }
-        });
-    </script>
+<div class="main-content">
+	<div class="year">
+		<!-- <span>2019</span> -->
+	</div> 
+	<div class="month"></div>
+	<div class="day"></div>
+	<div class="week"></div>
+	<div class="shichen"></div>
+	<div class="hour"></div>
+	<div class="minute"></div>
+	<div class="second"></div>
+</div>
+<script>
+var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "https://hm.baidu.com/hm.js?7a5d9384433cf1ebf2fd38ec72c5ac8f";
+  var s = document.getElementsByTagName("script")[0]; 
+  s.parentNode.insertBefore(hm, s);
+})();
+</script>
 </body>
 </html>
