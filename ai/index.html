@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Chat + MCP</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; background: #f5f5f5; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px; }
+        h1 { color: #333; margin: 0; font-size: 24px; }
+        .header-btns { display: flex; gap: 10px; flex-wrap: wrap; }
+        .btn { padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; transition: all 0.2s; }
+        .btn-new { background: #2196F3; color: white; }
+        .btn-new:hover { background: #1976D2; }
+        .btn-clear { background: #ff9800; color: white; }
+        .btn-clear:hover { background: #f57c00; }
+        .btn-search { background: #9c27b0; color: white; }
+        .btn-search:hover { background: #7b1fa2; }
+        .btn-search.active { background: #7b1fa2; box-shadow: inset 0 2px 4px rgba(0,0,0,0.3); }
+        .btn-debug { background: #607d8b; color: white; }
+        .btn-debug:hover { background: #455a64; }
+        .btn-debug.active { background: #37474f; }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        /* 对话区域 */
+        #chat-box { height: 400px; border: 1px solid #ddd; border-radius: 12px; overflow-y: auto; padding: 15px; background: white; margin-bottom: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .message { padding: 12px 16px; margin: 8px 0; border-radius: 12px; max-width: 90%; line-height: 1.6; white-space: pre-wrap; position: relative; }
+        .user { background: #4CAF50; color: white; margin-left: auto; border-bottom-right-radius: 4px; }
+        .ai { background: #e9ecef; color: #333; border-bottom-left-radius: 4px; }
+        .error { background: #ffebee; color: #c62828; }
+
+        /* MCP 详情面板 */
+        .mcp-panel { display: none; background: #fafafa; border: 1px solid #e0e0e0; border-radius: 8px; margin: 8px 0; padding: 12px; font-family: monospace; font-size: 12px; color: #555; }
+        .mcp-panel.expanded { display: block; }
+        .mcp-panel .step { padding: 4px 0; border-bottom: 1px solid #eee; }
+        .mcp-panel .step:last-child { border-bottom: none; }
+        .mcp-panel .step-title { color: #1976D2; font-weight: 600; }
+        .mcp-panel .step-content { margin-top: 4px; color: #666; word-break: break-all; }
+
+        /* 输入区域 */
+        #input-area { display: flex; gap: 10px; flex-wrap: wrap; }
+        #message { flex: 1; min-width: 200px; padding: 14px; border: 1px solid #ddd; border-radius: 8px; font-size: 16px; outline: none; resize: none; height: 60px; }
+        #message:focus { border-color: #4CAF50; }
+        .btn-send { padding: 14px 28px; background: #4CAF50; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: 600; }
+        .btn-send:hover { background: #45a049; }
+        .btn-send:disabled { background: #ccc; cursor: not-allowed; }
+        .typing { color: #999; font-style: italic; }
+        .empty-tip { text-align: center; color: #999; padding: 50px; }
+        .search-badge { display: inline-block; background: #9c27b0; color: white; padding: 2px 8px; border-radius: 10px; font-size: 11px; margin-bottom: 8px; }
+
+        /* 搜索结果样式 */
+        .search-results { background: #fff3e0; border-left: 3px solid #ff9800; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>AI Chat</h1>
+        <div class="header-btns">
+            <button class="btn btn-search" id="searchBtn">🔍 联网搜索</button>
+            <button class="btn btn-debug" id="debugBtn">▶ 详情</button>
+            <button class="btn btn-new" id="newBtn">新建对话</button>
+            <button class="btn btn-clear" id="clearBtn">清空</button>
+        </div>
+    </div>
+
+    <div id="chat-box"><div class="empty-tip">开始输入消息开始对话...</div></div>
+
+    <!-- MCP 详情面板 -->
+    <div class="mcp-panel" id="mcpPanel">
+        <div id="mcpContent">暂无记录</div>
+    </div>
+
+    <div id="input-area">
+        <textarea id="message" placeholder="输入消息... (Ctrl+Enter 换行)" autocomplete="off"></textarea>
+        <button class="btn-send" id="send-btn">发送</button>
+    </div>
+
+    <script>
+        const chatBox = document.getElementById('chat-box');
+        const messageInput = document.getElementById('message');
+        const sendBtn = document.getElementById('send-btn');
+        const newBtn = document.getElementById('newBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const searchBtn = document.getElementById('searchBtn');
+        const debugBtn = document.getElementById('debugBtn');
+        const mcpPanel = document.getElementById('mcpPanel');
+        const mcpContent = document.getElementById('mcpContent');
+
+        let conversation = [];
+        let searchMode = false;
+        let debugMode = false;
+        let debugLogs = [];
+
+        // 从本地存储加载对话
+        function loadConversation() {
+            const saved = localStorage.getItem('ai_conversation');
+            if (saved) {
+                conversation = JSON.parse(saved);
+                if (conversation.length > 0) {
+                    renderConversation();
+                } else {
+                    showEmptyTip();
+                }
+            } else {
+                showEmptyTip();
+            }
+        }
+
+        function saveConversation() {
+            localStorage.setItem('ai_conversation', JSON.stringify(conversation));
+        }
+
+        function showEmptyTip() {
+            chatBox.innerHTML = '<div class="empty-tip">开始输入消息开始对话...</div>';
+        }
+
+        function renderConversation() {
+            chatBox.innerHTML = '';
+            conversation.forEach(msg => {
+                addMessageToDOM(msg.role, msg.content, msg.isSearch);
+            });
+            scrollToBottom();
+        }
+
+        function addMessageToDOM(role, text, isSearch = false) {
+            const div = document.createElement('div');
+            div.className = `message ${role}`;
+            if (isSearch) div.classList.add('search-results');
+            div.textContent = text;
+            chatBox.appendChild(div);
+        }
+
+        function scrollToBottom() {
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        function logStep(title, content) {
+            debugLogs.push({ title, content, time: new Date().toLocaleTimeString() });
+            if (debugMode) updateMCPDisplay();
+        }
+
+        function updateMCPDisplay() {
+            if (debugLogs.length === 0) {
+                mcpContent.innerHTML = '暂无记录';
+                return;
+            }
+            mcpContent.innerHTML = debugLogs.map(step => `
+                <div class="step">
+                    <div class="step-title">[${step.time}] ${step.title}</div>
+                    <div class="step-content">${escapeHtml(step.content)}</div>
+                </div>
+            `).join('');
+            scrollToBottom();
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function showTyping() {
+            const div = document.createElement('div');
+            div.className = 'message ai typing';
+            div.id = 'typing';
+            div.textContent = searchMode ? '🔍 搜索中...' : '思考中...';
+            chatBox.appendChild(div);
+            scrollToBottom();
+        }
+
+        function removeTyping() {
+            const typing = document.getElementById('typing');
+            if (typing) typing.remove();
+        }
+
+        async function sendMessage() {
+            const msg = messageInput.value.trim();
+            if (!msg) return;
+
+            messageInput.value = '';
+            sendBtn.disabled = true;
+            newBtn.disabled = true;
+            clearBtn.disabled = true;
+
+            // 清空本次调试日志
+            debugLogs = [];
+            logStep('用户输入', msg);
+
+            conversation.push({ role: 'user', content: msg });
+            addMessageToDOM('user', msg);
+            saveConversation();
+            scrollToBottom();
+
+            showTyping();
+
+            try {
+                // 仅在搜索模式下调用 Tavily
+                let searchResults = null;
+                let searchAnswer = null;
+
+                if (searchMode) {
+                    logStep('优化搜索词', `"${msg}" → 分析中...`);
+                    try {
+                        // 先调用 AI 优化搜索词
+                        const optimizeRes = await fetch('api.php', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                message: `请将以下搜索查询优化为更适合搜索引擎的关键词，只返回优化后的关键词，不要任何解释：${msg}`
+                            })
+                        });
+                        const optimizeData = await optimizeRes.json();
+                        const optimizedQuery = optimizeData.reply.trim();
+                        logStep('优化完成', `"${msg}" → "${optimizedQuery}"`);
+
+                        // 用优化后的词搜索
+                        logStep('开始搜索', `查询: "${optimizedQuery}"`);
+                        const searchRes = await fetch('tavily.php', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ query: optimizedQuery })
+                        });
+                        const searchData = await searchRes.json();
+                        if (searchData.results && searchData.results.length > 0) {
+                            searchResults = searchData.results;
+                            searchAnswer = searchData.answer;
+                            logStep('搜索完成', `找到 ${searchResults.length} 条结果`);
+                            if (searchAnswer) logStep('AI 摘要', searchAnswer);
+                        } else {
+                            logStep('搜索结果', '未找到相关内容');
+                        }
+                    } catch (e) {
+                        logStep('搜索失败', e.message);
+                    }
+                }
+
+                // 调用 AI
+                logStep(searchMode ? '调用 AI (含搜索结果)' : '调用 AI', '发送请求...');
+                const aiRes = await fetch('api.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: msg, searchResults, searchAnswer })
+                });
+
+                removeTyping();
+
+                if (!aiRes.ok) {
+                    throw new Error('API 请求失败');
+                }
+
+                const data = await aiRes.json();
+                logStep('AI 响应', data.reply.slice(0, 100) + '...');
+
+                // 显示结果
+                let displayText = data.reply;
+                if (searchMode && searchResults && searchResults.length > 0) {
+                    displayText = `🔍 已搜索网络\n\n${data.reply}`;
+                }
+
+                conversation.push({ role: 'ai', content: displayText, isSearch: !!searchResults });
+                addMessageToDOM('ai', displayText, !!searchResults);
+                saveConversation();
+
+            } catch (err) {
+                removeTyping();
+                const errorMsg = '错误: ' + err.message;
+                logStep('错误', errorMsg);
+                conversation.push({ role: 'error', content: errorMsg });
+                addMessageToDOM('error', errorMsg);
+                saveConversation();
+            } finally {
+                sendBtn.disabled = false;
+                newBtn.disabled = false;
+                clearBtn.disabled = false;
+                messageInput.focus();
+            }
+        }
+
+        function toggleSearch() {
+            searchMode = !searchMode;
+            searchBtn.classList.toggle('active', searchMode);
+            searchBtn.textContent = searchMode ? '📝 普通对话' : '🔍 联网搜索';
+        }
+
+        function toggleDebug() {
+            debugMode = !debugMode;
+            mcpPanel.classList.toggle('expanded', debugMode);
+            debugBtn.classList.toggle('active', debugMode);
+            debugBtn.textContent = debugMode ? '▼ 详情' : '▶ 详情';
+            if (debugMode && debugLogs.length > 0) updateMCPDisplay();
+        }
+
+        function newConversation() {
+            if (conversation.length > 0 && !confirm('开始新对话？当前对话将被保存。')) return;
+            conversation = [];
+            debugLogs = [];
+            saveConversation();
+            showEmptyTip();
+        }
+
+        function clearConversation() {
+            if (conversation.length === 0) return;
+            if (!confirm('确定清空当前对话？')) return;
+            conversation = [];
+            debugLogs = [];
+            saveConversation();
+            showEmptyTip();
+        }
+
+        // 事件绑定
+        sendBtn.onclick = sendMessage;
+        messageInput.onkeypress = (e) => {
+            if (e.key === 'Enter' && !e.ctrlKey && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        };
+        newBtn.onclick = newConversation;
+        clearBtn.onclick = clearConversation;
+        searchBtn.onclick = toggleSearch;
+        debugBtn.onclick = toggleDebug;
+
+        // 初始化
+        loadConversation();
+    </script>
+</body>
+</html>

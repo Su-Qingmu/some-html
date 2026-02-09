@@ -32,6 +32,27 @@
             margin-bottom: 30px;
             font-size: 14px;
         }
+        .switch-btns {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .switch-btn {
+            padding: 10px 20px;
+            border-radius: 20px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        .switch-btn.tts {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+        }
+        .switch-btn.tts:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(17, 153, 142, 0.4);
+        }
         .card {
             background: white;
             border-radius: 16px;
@@ -139,6 +160,11 @@
         <p class="subtitle">基于 Web Speech API | 完全离线可用 | 无需 API 密钥</p>
 
         <div class="card">
+            <div class="switch-btns">
+                <span style="color: #667eea; font-weight: 600; font-size: 18px;">语音转文字 (ASR)</span>
+                <a href="tts.html" class="switch-btn tts">🔊 文字转语音 (TTS)</a>
+            </div>
+
             <div class="controls">
                 <button id="startBtn">开始录音</button>
                 <button id="clearBtn">清空</button>
@@ -175,7 +201,6 @@
         let isRecording = false;
         let finalTranscript = '';
 
-        // 检查浏览器是否支持 Web Speech API
         if ('webkitSpeechRecognition' in window) {
             recognition = new webkitSpeechRecognition();
         } else if ('SpeechRecognition' in window) {
@@ -187,7 +212,6 @@
         }
 
         if (recognition) {
-            // 配置识别器
             recognition.continuous = true;
             recognition.interimResults = true;
             recognition.lang = 'zh-CN';
@@ -202,9 +226,9 @@
 
             recognition.onend = () => {
                 if (isRecording) {
-                    recognition.start(); // 保持连续识别
+                    recognition.start();
                 } else {
-                    startBtn.textContent = '🎤 开始录音';
+                    startBtn.textContent = '开始录音';
                     startBtn.classList.remove('recording');
                     status.textContent = '✅ 录音已停止';
                     status.className = 'status-idle';
@@ -225,7 +249,6 @@
             };
 
             recognition.onerror = (event) => {
-                console.error('语音识别错误:', event.error);
                 if (event.error === 'not-allowed') {
                     status.textContent = '❌ 请允许麦克风权限';
                 } else {
@@ -233,7 +256,6 @@
                 }
             };
 
-            // 按钮事件
             startBtn.addEventListener('click', () => {
                 if (isRecording) {
                     isRecording = false;
