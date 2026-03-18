@@ -54,6 +54,27 @@
             color: white;
             border-color: #4285f4;
         }
+        .nav-buttons {
+            display: flex;
+            gap: 4px;
+        }
+        .nav-button {
+            padding: 6px 10px;
+            font-size: 16px;
+            background-color: #fff;
+            color: #333;
+            border: 1px solid #dadce0;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .nav-button:hover:not(:disabled) {
+            background-color: #e8eaed;
+        }
+        .nav-button:disabled {
+            color: #ccc;
+            cursor: not-allowed;
+        }
         .address-bar {
             display: flex;
             flex-grow: 1;
@@ -140,6 +161,10 @@
 <body>
     <div class="browser-container">
         <div class="toolbar">
+            <div class="nav-buttons">
+                <button class="nav-button" id="back-button" title="后退" disabled>&#8592;</button>
+                <button class="nav-button" id="forward-button" title="前进" disabled>&#8594;</button>
+            </div>
             <div class="platform-buttons">
                 <button class="platform-button" data-platform="windows-edge">Windows (Edge)</button>
                 <button class="platform-button" data-platform="windows-chrome">Windows (Chrome)</button>
@@ -171,8 +196,14 @@
         const loadingOverlay = document.getElementById('loading');
         const errorMsg = document.getElementById('error-msg');
         const errorText = document.getElementById('error-text');
+        const backButton = document.getElementById('back-button');
+        const forwardButton = document.getElementById('forward-button');
 
         let currentPlatform = null;
+
+        // 历史记录管理
+        const history = [];
+        let historyIndex = -1;
 
         // 平台尺寸配置
         const platformSizes = {
@@ -230,6 +261,18 @@
             browserFrame.style.width = sizes.width;
             browserFrame.style.height = sizes.height;
 
+            // 添加到历史记录
+            const newUrl = url;
+            if (historyIndex < history.length - 1) {
+                // 如果当前位置不是最后一项，删除后面的历史
+                history.splice(historyIndex + 1);
+            }
+            if (history.length === 0 || history[history.length - 1] !== newUrl) {
+                history.push(newUrl);
+            }
+            historyIndex = history.length - 1;
+            updateNavButtons();
+
             browserFrame.src = url;
         }
 
@@ -250,6 +293,11 @@
             errorMsg.classList.remove('show');
         }
 
+        function updateNavButtons() {
+            backButton.disabled = historyIndex <= 0;
+            forwardButton.disabled = historyIndex >= history.length - 1;
+        }
+
         // iframe 加载完成事件
         browserFrame.addEventListener('load', function() {
             hideLoading();
@@ -257,6 +305,27 @@
 
         browserFrame.addEventListener('loaderror', function() {
             hideLoading();
+        });
+
+        // 前进后退按钮事件
+        backButton.addEventListener('click', function() {
+            if (historyIndex > 0) {
+                historyIndex--;
+                const url = history[historyIndex];
+                urlInput.value = url;
+                browserFrame.src = url;
+                updateNavButtons();
+            }
+        });
+
+        forwardButton.addEventListener('click', function() {
+            if (historyIndex < history.length - 1) {
+                historyIndex++;
+                const url = history[historyIndex];
+                urlInput.value = url;
+                browserFrame.src = url;
+                updateNavButtons();
+            }
         });
 
         // 事件监听
