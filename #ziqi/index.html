@@ -1,0 +1,1114 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>终极井字棋</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #fff;
+            padding: 20px;
+        }
+
+        /* 首页样式 */
+        .menu-screen {
+            text-align: center;
+        }
+
+        .menu-title {
+            font-size: 3rem;
+            margin-bottom: 40px;
+            text-shadow: 0 0 30px rgba(79, 172, 254, 0.7);
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes glow {
+            from { text-shadow: 0 0 20px rgba(79, 172, 254, 0.5); }
+            to { text-shadow: 0 0 40px rgba(79, 172, 254, 0.9), 0 0 60px rgba(0, 242, 254, 0.5); }
+        }
+
+        .menu-btn {
+            display: block;
+            width: 200px;
+            padding: 15px 30px;
+            margin: 15px auto;
+            font-size: 1.3rem;
+            background: linear-gradient(135deg, rgba(79, 172, 254, 0.3) 0%, rgba(0, 242, 254, 0.3) 100%);
+            border: 2px solid rgba(79, 172, 254, 0.5);
+            border-radius: 30px;
+            color: #fff;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .menu-btn:hover {
+            background: linear-gradient(135deg, rgba(79, 172, 254, 0.5) 0%, rgba(0, 242, 254, 0.5) 100%);
+            transform: scale(1.05);
+            box-shadow: 0 0 25px rgba(79, 172, 254, 0.5);
+        }
+
+        .difficulty-screen {
+            text-align: center;
+        }
+
+        .difficulty-title {
+            font-size: 2rem;
+            margin-bottom: 30px;
+            color: #4facfe;
+        }
+
+        .difficulty-btn {
+            display: block;
+            width: 180px;
+            padding: 12px 30px;
+            margin: 12px auto;
+            font-size: 1.1rem;
+            background: linear-gradient(135deg, rgba(79, 172, 254, 0.2) 0%, rgba(0, 242, 254, 0.2) 100%);
+            border: 2px solid rgba(79, 172, 254, 0.4);
+            border-radius: 25px;
+            color: #fff;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .difficulty-btn:hover {
+            background: linear-gradient(135deg, rgba(79, 172, 254, 0.4) 0%, rgba(0, 242, 254, 0.4) 100%);
+            transform: scale(1.05);
+        }
+
+        .difficulty-btn.easy { border-color: rgba(76, 175, 80, 0.5); }
+        .difficulty-btn.easy:hover { background: linear-gradient(135deg, rgba(76, 175, 80, 0.4) 0%, rgba(76, 175, 80, 0.2) 100%); box-shadow: 0 0 20px rgba(76, 175, 80, 0.4); }
+
+        .difficulty-btn.normal { border-color: rgba(255, 193, 7, 0.5); }
+        .difficulty-btn.normal:hover { background: linear-gradient(135deg, rgba(255, 193, 7, 0.4) 0%, rgba(255, 193, 7, 0.2) 100%); box-shadow: 0 0 20px rgba(255, 193, 7, 0.4); }
+
+        .difficulty-btn.hard { border-color: rgba(244, 67, 54, 0.5); }
+        .difficulty-btn.hard:hover { background: linear-gradient(135deg, rgba(244, 67, 54, 0.4) 0%, rgba(244, 67, 54, 0.2) 100%); box-shadow: 0 0 20px rgba(244, 67, 54, 0.4); }
+
+        .back-btn {
+            display: inline-block;
+            margin-top: 25px;
+            padding: 10px 30px;
+            font-size: 1rem;
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 20px;
+            color: #aaa;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+        }
+
+        /* 游戏画面 */
+        .game-screen {
+            display: none;
+        }
+
+        .game-screen.active {
+            display: block;
+        }
+
+        .menu-screen, .difficulty-screen {
+            display: none;
+        }
+
+        .menu-screen.active, .difficulty-screen.active {
+            display: block;
+        }
+
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 15px;
+            text-shadow: 0 0 20px rgba(79, 172, 254, 0.5);
+        }
+
+        .mode-info {
+            font-size: 1rem;
+            color: #aaa;
+            margin-bottom: 15px;
+        }
+
+        .score-board {
+            display: flex;
+            gap: 40px;
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+        }
+
+        .score {
+            padding: 8px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+        }
+
+        .score.x { color: #ff6b6b; }
+        .score.o { color: #4facfe; }
+
+        .status {
+            font-size: 1.1rem;
+            margin-bottom: 15px;
+            padding: 8px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+        }
+
+        .status span {
+            font-weight: bold;
+            color: #4facfe;
+        }
+
+        .hint {
+            font-size: 0.9rem;
+            color: #aaa;
+            margin-bottom: 15px;
+            min-height: 20px;
+        }
+
+        .big-board {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 6px;
+            background: rgba(255, 255, 255, 0.3);
+            padding: 6px;
+            border-radius: 12px;
+        }
+
+        .big-cell {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 3px;
+            background: rgba(255, 255, 255, 0.15);
+            padding: 3px;
+            border-radius: 6px;
+            width: 180px;
+            height: 180px;
+            position: relative;
+        }
+
+        .big-cell.active {
+            box-shadow: 0 0 15px rgba(79, 172, 254, 0.6);
+            background: rgba(79, 172, 254, 0.2);
+        }
+
+        .big-cell.winner-x {
+            background: rgba(255, 107, 107, 0.3);
+        }
+
+        .big-cell.winner-o {
+            background: rgba(79, 172, 254, 0.3);
+        }
+
+        .big-cell.winner-x::after {
+            content: 'X';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 5rem;
+            color: #ff6b6b;
+            text-shadow: 0 0 20px rgba(255, 107, 107, 0.8);
+            pointer-events: none;
+        }
+
+        .big-cell.winner-o::after {
+            content: 'O';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 5rem;
+            color: #4facfe;
+            text-shadow: 0 0 20px rgba(79, 172, 254, 0.8);
+            pointer-events: none;
+        }
+
+        .small-cell {
+            width: 58px;
+            height: 58px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            border-radius: 4px;
+            font-size: 1.8rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .small-cell:hover:not(.taken):not(.disabled) {
+            background: rgba(255, 255, 255, 0.35);
+        }
+
+        .small-cell.disabled {
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+
+        .small-cell.x { color: #ff6b6b; }
+        .small-cell.o { color: #4facfe; }
+
+        .small-cell.taken { cursor: default; }
+
+        .btn-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 25px;
+        }
+
+        .reset-btn, .menu-btn-return {
+            padding: 12px 30px;
+            font-size: 1.1rem;
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            border: none;
+            border-radius: 25px;
+            color: #fff;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+        }
+
+        .reset-btn:hover, .menu-btn-return:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(79, 172, 254, 0.4);
+        }
+
+        /* 联机画面 */
+        .online-screen {
+            text-align: center;
+        }
+
+        .room-input {
+            width: 150px;
+            padding: 12px;
+            font-size: 1.5rem;
+            text-align: center;
+            letter-spacing: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(79, 172, 254, 0.5);
+            border-radius: 10px;
+            color: #fff;
+            margin-bottom: 20px;
+        }
+
+        .room-input:focus {
+            outline: none;
+            border-color: #4facfe;
+            box-shadow: 0 0 15px rgba(79, 172, 254, 0.5);
+        }
+
+        .room-code-display {
+            font-size: 3rem;
+            letter-spacing: 15px;
+            color: #4facfe;
+            margin: 20px 0;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+        }
+
+        .waiting-text {
+            color: #aaa;
+            margin: 20px 0;
+        }
+
+        .player-badge {
+            display: inline-block;
+            padding: 8px 20px;
+            background: rgba(79, 172, 254, 0.3);
+            border-radius: 20px;
+            margin-bottom: 15px;
+        }
+
+        .error-msg {
+            color: #ff6b6b;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <!-- 首页菜单 -->
+    <div class="menu-screen active" id="menuScreen">
+        <h1 class="menu-title">终极井字棋</h1>
+        <button class="menu-btn" onclick="startGame('single')">单机模式</button>
+        <button class="menu-btn" onclick="showDifficulty()">人机模式</button>
+        <button class="menu-btn" onclick="showOnlineMenu()">联机模式</button>
+    </div>
+
+    <!-- 难度选择 -->
+    <div class="difficulty-screen" id="difficultyScreen">
+        <h2 class="difficulty-title">选择难度</h2>
+        <button class="difficulty-btn easy" onclick="startGame('ai', 'easy')">简单</button>
+        <button class="difficulty-btn normal" onclick="startGame('ai', 'normal')">普通</button>
+        <button class="difficulty-btn hard" onclick="startGame('ai', 'hard')">高级</button>
+        <button class="back-btn" onclick="showMenu()">返回</button>
+    </div>
+
+    <!-- 联机菜单 -->
+    <div class="difficulty-screen" id="onlineMenuScreen">
+        <h2 class="difficulty-title">联机模式</h2>
+        <button class="menu-btn" onclick="createRoom()">创建房间</button>
+        <div style="margin: 30px 0;">
+            <p style="margin-bottom: 10px;">或输入房间号加入</p>
+            <input type="text" class="room-input" id="roomCodeInput" maxlength="4" placeholder="0000">
+            <button class="menu-btn" style="width: 150px;" onclick="joinRoom()">加入</button>
+        </div>
+        <div class="error-msg" id="onlineError"></div>
+        <button class="back-btn" onclick="showMenu()">返回</button>
+    </div>
+
+    <!-- 等待房间 -->
+    <div class="game-screen online-screen" id="waitingScreen">
+        <h1>等待玩家加入</h1>
+        <div class="room-code-display" id="roomCodeDisplay"></div>
+        <p class="waiting-text">请将房间号告诉你的朋友</p>
+        <div class="player-badge" id="playerBadge"></div>
+        <button class="back-btn" onclick="showOnlineMenu()">取消</button>
+    </div>
+
+    <!-- 游戏画面 -->
+    <div class="game-screen" id="gameScreen">
+        <h1>终极井字棋</h1>
+        <div class="mode-info" id="modeInfo"></div>
+        <div class="score-board">
+            <div class="score x">X: <span id="scoreX">0</span> 小棋盘</div>
+            <div class="score o">O: <span id="scoreO">0</span> 小棋盘</div>
+        </div>
+        <div class="status">当前玩家: <span id="currentPlayer">X</span></div>
+        <div class="hint" id="hint">先手可随便下棋</div>
+        <div class="big-board" id="bigBoard"></div>
+        <div class="btn-group">
+            <button class="reset-btn" onclick="resetGame()">重新开始</button>
+            <button class="menu-btn-return" onclick="showMenu()">返回菜单</button>
+        </div>
+    </div>
+
+    <script>
+        // 游戏配置
+        const API_URL = 'server.php';
+
+        // 游戏状态
+        let gameMode = 'single';
+        let aiDifficulty = 'normal';
+        let roomCode = null;
+        let playerSymbol = null;
+        let bigBoard = [];
+        let bigWinners = Array(9).fill(null);
+        let currentPlayer = 'X';
+        let gameOver = false;
+        let allowedBigIdx = -1;
+        let totalMoves = 0;
+        let pollInterval = null;
+
+        // DOM 元素
+        const menuScreen = document.getElementById('menuScreen');
+        const difficultyScreen = document.getElementById('difficultyScreen');
+        const onlineMenuScreen = document.getElementById('onlineMenuScreen');
+        const waitingScreen = document.getElementById('waitingScreen');
+        const gameScreen = document.getElementById('gameScreen');
+        const bigBoardEl = document.getElementById('bigBoard');
+        const currentPlayerSpan = document.getElementById('currentPlayer');
+        const scoreXSpan = document.getElementById('scoreX');
+        const scoreOSpan = document.getElementById('scoreO');
+        const hintEl = document.getElementById('hint');
+        const modeInfoEl = document.getElementById('modeInfo');
+        const onlineError = document.getElementById('onlineError');
+
+        // 显示不同画面
+        function showMenu() {
+            stopPolling();
+            menuScreen.classList.add('active');
+            difficultyScreen.classList.remove('active');
+            onlineMenuScreen.classList.remove('active');
+            waitingScreen.classList.remove('active');
+            gameScreen.classList.remove('active');
+        }
+
+        function showDifficulty() {
+            menuScreen.classList.remove('active');
+            difficultyScreen.classList.add('active');
+        }
+
+        function showOnlineMenu() {
+            menuScreen.classList.remove('active');
+            onlineMenuScreen.classList.add('active');
+            waitingScreen.classList.remove('active');
+            gameScreen.classList.remove('active');
+            onlineError.textContent = '';
+        }
+
+        // 开始游戏
+        function startGame(mode, difficulty) {
+            gameMode = mode;
+            if (difficulty) aiDifficulty = difficulty;
+
+            // 设置模式信息
+            let modeText = '双人对战';
+            if (mode === 'ai') {
+                const diffNames = { easy: '简单', normal: '普通', hard: '高级' };
+                modeText = `AI (${diffNames[aiDifficulty]})`;
+            } else if (mode === 'online') {
+                modeText = '联机对战';
+            }
+            modeInfoEl.textContent = modeText;
+
+            menuScreen.classList.remove('active');
+            difficultyScreen.classList.remove('active');
+            onlineMenuScreen.classList.remove('active');
+            waitingScreen.classList.remove('active');
+            gameScreen.classList.add('active');
+
+            resetGame();
+        }
+
+        // 创建房间
+        async function createRoom() {
+            try {
+                const response = await fetch(API_URL + '?action=create_room', { method: 'POST' });
+                const data = await response.json();
+
+                if (data.success) {
+                    roomCode = data.room_code;
+                    playerSymbol = data.player;
+
+                    document.getElementById('roomCodeDisplay').textContent = roomCode;
+                    document.getElementById('playerBadge').textContent = `你是玩家 X`;
+
+                    onlineMenuScreen.classList.remove('active');
+                    waitingScreen.classList.add('active');
+
+                    // 轮询等待玩家加入
+                    pollInterval = setInterval(checkRoomStatus, 1000);
+                } else {
+                    onlineError.textContent = data.error || '创建房间失败';
+                }
+            } catch (e) {
+                onlineError.textContent = '网络错误';
+            }
+        }
+
+        // 加入房间
+        async function joinRoom() {
+            const code = document.getElementById('roomCodeInput').value.trim();
+
+            if (code.length !== 4 || !/^\d+$/.test(code)) {
+                onlineError.textContent = '请输入4位房间号';
+                return;
+            }
+
+            try {
+                const response = await fetch(API_URL + '?action=join_room', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: 'room_code=' + code
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    roomCode = data.room_code;
+                    playerSymbol = data.player;
+
+                    // 进入等待画面，等待另一位玩家
+                    onlineMenuScreen.classList.remove('active');
+                    waitingScreen.classList.add('active');
+
+                    // 等待房间满员
+                    pollInterval = setInterval(checkJoinStatus, 1000);
+                } else {
+                    onlineError.textContent = data.error || '加入房间失败';
+                }
+            } catch (e) {
+                onlineError.textContent = '网络错误';
+            }
+        }
+
+        // 检查加入后的房间状态
+        async function checkJoinStatus() {
+            try {
+                const response = await fetch(API_URL + '?action=get_status&room_code=' + roomCode + '&player=' + playerSymbol);
+                const data = await response.json();
+
+                console.log('Join status:', data);
+
+                if (data.success && data.room_full) {
+                    stopPolling();
+                    // 获取服务器初始状态后再开始游戏
+                    await syncFromServer();
+                    startGame('online');
+                    startPolling();
+                } else if (data.success && data.players) {
+                    const waitingText = document.querySelector('.waiting-text');
+                    if (waitingText) {
+                        const xJoined = data.players.X ? '已加入' : '等待中...';
+                        waitingText.textContent = `X ${xJoined} | O 已加入`;
+                    }
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        // 从服务器同步游戏状态
+        async function syncFromServer() {
+            try {
+                const response = await fetch(API_URL + '?action=get_status&room_code=' + roomCode + '&player=' + playerSymbol);
+                const data = await response.json();
+
+                if (data.success) {
+                    // 同步棋盘
+                    for (let bigIdx = 0; bigIdx < 9; bigIdx++) {
+                        for (let smallIdx = 0; smallIdx < 9; smallIdx++) {
+                            const value = data.board[bigIdx][smallIdx];
+                            if (value) {
+                                bigBoard[bigIdx][smallIdx].textContent = value;
+                                bigBoard[bigIdx][smallIdx].classList.add('taken', value.toLowerCase());
+                            }
+                        }
+                    }
+
+                    // 同步大棋盘获胜状态
+                    for (let i = 0; i < 9; i++) {
+                        if (data.big_winners[i]) {
+                            bigWinners[i] = data.big_winners[i];
+                            const bigCell = document.querySelectorAll('.big-cell')[i];
+                            bigCell.classList.add(`winner-${data.big_winners[i].toLowerCase()}`);
+                        }
+                    }
+
+                    currentPlayer = data.current_player;
+                    allowedBigIdx = data.allowed_big_idx;
+                    totalMoves = data.total_moves;
+                    gameOver = data.game_over;
+
+                    currentPlayerSpan.textContent = currentPlayer;
+                    updateScores();
+                    updateBoardState();
+                    updateHint();
+
+                    if (gameOver) {
+                        endGame(data.winner);
+                    }
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        // 检查房间状态（房主等待玩家加入）
+        async function checkRoomStatus() {
+            try {
+                const response = await fetch(API_URL + '?action=get_status&room_code=' + roomCode + '&player=' + playerSymbol);
+                const data = await response.json();
+
+                console.log('Room status:', data);
+
+                // 等待另一位玩家加入（room_full为true表示两位玩家都在）
+                if (data.success && data.room_full) {
+                    stopPolling();
+                    startGame('online');
+                    startPolling();
+                } else if (data.success && data.players) {
+                    // 更新等待信息
+                    const waitingText = document.querySelector('.waiting-text');
+                    if (waitingText) {
+                        const oJoined = data.players.O ? '已加入' : '等待中...';
+                        waitingText.textContent = `X ${data.players.X ? '已加入' : '等待中...'} | O ${oJoined}`;
+                    }
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        // 开始轮询
+        function startPolling() {
+            if (pollInterval) clearInterval(pollInterval);
+            pollInterval = setInterval(async () => {
+                if (!roomCode || gameOver) return;
+
+                try {
+                    const response = await fetch(API_URL + '?action=get_status&room_code=' + roomCode + '&player=' + playerSymbol);
+                    const data = await response.json();
+
+                    if (data.success) {
+                        updateGameFromServer(data);
+                    }
+                } catch (e) {
+                    console.error(e);
+                }
+            }, 1000);
+        }
+
+        // 停止轮询
+        function stopPolling() {
+            if (pollInterval) {
+                clearInterval(pollInterval);
+                pollInterval = null;
+            }
+        }
+
+        // 从服务器更新游戏状态
+        function updateGameFromServer(data) {
+            // 同步棋盘
+            for (let bigIdx = 0; bigIdx < 9; bigIdx++) {
+                for (let smallIdx = 0; smallIdx < 9; smallIdx++) {
+                    const value = data.board[bigIdx][smallIdx];
+                    const cell = bigBoard[bigIdx][smallIdx];
+                    if (value && !cell.textContent) {
+                        cell.textContent = value;
+                        cell.classList.add('taken', value.toLowerCase());
+                    }
+                }
+            }
+
+            // 更新大棋盘获胜状态
+            for (let i = 0; i < 9; i++) {
+                if (data.big_winners[i] && bigWinners[i] !== data.big_winners[i]) {
+                    bigWinners[i] = data.big_winners[i];
+                    const bigCell = document.querySelectorAll('.big-cell')[i];
+                    bigCell.classList.add(`winner-${data.big_winners[i].toLowerCase()}`);
+                }
+            }
+
+            currentPlayer = data.current_player;
+            allowedBigIdx = data.allowed_big_idx;
+            totalMoves = data.total_moves;
+            gameOver = data.game_over;
+
+            currentPlayerSpan.textContent = currentPlayer;
+            updateScores();
+            updateBoardState();
+
+            if (gameOver) {
+                endGame(data.winner);
+            }
+
+            // 更新提示
+            updateHint();
+        }
+
+        // 初始化棋盘
+        function initBoard() {
+            bigBoardEl.innerHTML = '';
+            bigBoard = [];
+            totalMoves = 0;
+
+            for (let bigIdx = 0; bigIdx < 9; bigIdx++) {
+                const bigCell = document.createElement('div');
+                bigCell.className = 'big-cell';
+                bigCell.dataset.bigIdx = bigIdx;
+
+                let smallBoard = [];
+                for (let smallIdx = 0; smallIdx < 9; smallIdx++) {
+                    const smallCell = document.createElement('button');
+                    smallCell.className = 'small-cell';
+                    smallCell.dataset.bigIdx = bigIdx;
+                    smallCell.dataset.smallIdx = smallIdx;
+                    smallCell.addEventListener('click', () => handleClick(bigIdx, smallIdx));
+                    bigCell.appendChild(smallCell);
+                    smallBoard.push(smallCell);
+                }
+
+                bigBoard.push(smallBoard);
+                bigBoardEl.appendChild(bigCell);
+            }
+
+            updateBoardState();
+        }
+
+        // 更新棋盘状态
+        function updateBoardState() {
+            const bigCells = document.querySelectorAll('.big-cell');
+
+            bigCells.forEach((cell, bigIdx) => {
+                const smallCells = bigBoard[bigIdx];
+                const isBigFinished = bigWinners[bigIdx] !== null;
+                const isBigFull = smallCells.every(sc => sc.classList.contains('taken'));
+                const isAllowed = allowedBigIdx === -1 || allowedBigIdx === bigIdx;
+                const canPlay = isAllowed && !isBigFinished && !isBigFull;
+
+                // 联机模式下判断是否自己的回合
+                const isMyTurn = !gameOver && (gameMode !== 'online' || currentPlayer === playerSymbol);
+
+                smallCells.forEach(sc => {
+                    if (canPlay && isMyTurn) {
+                        sc.classList.remove('disabled');
+                    } else {
+                        sc.classList.add('disabled');
+                    }
+                });
+
+                if (isAllowed && !isBigFinished && !isBigFull && isMyTurn) {
+                    cell.classList.add('active');
+                } else {
+                    cell.classList.remove('active');
+                }
+            });
+        }
+
+        // 更新提示
+        function updateHint() {
+            const nextPlayer = currentPlayer;
+            if (gameMode === 'online') {
+                if (currentPlayer === playerSymbol) {
+                    hintEl.textContent = '轮到你了';
+                } else {
+                    hintEl.textContent = '等待对手...';
+                }
+            } else if (allowedBigIdx === -1) {
+                hintEl.textContent = `${nextPlayer} 可在任意位置下棋`;
+            } else {
+                hintEl.textContent = `${nextPlayer} 必须在高亮区域下棋`;
+            }
+        }
+
+        // 处理点击
+        async function handleClick(bigIdx, smallIdx) {
+            if (gameOver) return;
+            if (bigWinners[bigIdx] !== null) return;
+            if (allowedBigIdx !== -1 && allowedBigIdx !== bigIdx) return;
+
+            // 人机/联机模式下检查是否轮到自己
+            if (gameMode === 'ai' && currentPlayer === 'O') return;
+            if (gameMode === 'online' && currentPlayer !== playerSymbol) return;
+
+            const cell = bigBoard[bigIdx][smallIdx];
+            if (cell.classList.contains('taken')) return;
+
+            // 落子
+            cell.textContent = currentPlayer;
+            cell.classList.add('taken', currentPlayer.toLowerCase());
+            totalMoves++;
+
+            // 检查小棋盘是否获胜
+            const smallWinner = checkSmallBoardWinner(bigIdx);
+            if (smallWinner) {
+                bigWinners[bigIdx] = smallWinner;
+                const bigCell = document.querySelectorAll('.big-cell')[bigIdx];
+                bigCell.classList.add(`winner-${smallWinner.toLowerCase()}`);
+                updateScores();
+            }
+
+            // 检查游戏是否结束
+            const allFinished = bigWinners.every(w => w !== null);
+            const bigFull = bigBoard.every(small => small.every(sc => sc.classList.contains('taken')));
+
+            if (allFinished || bigFull) {
+                endGame();
+                if (gameMode === 'online') {
+                    await syncMoveToServer(bigIdx, smallIdx);
+                }
+                return;
+            }
+
+            // 更新限制
+            updateRestriction(smallIdx);
+
+            // 切换玩家
+            currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+            currentPlayerSpan.textContent = currentPlayer;
+
+            updateBoardState();
+            updateHint();
+
+            // 同步到服务器
+            if (gameMode === 'online') {
+                await syncMoveToServer(bigIdx, smallIdx);
+            }
+
+            // 人机模式
+            if (gameMode === 'ai' && !gameOver) {
+                setTimeout(aiMove, 500);
+            }
+        }
+
+        // 同步落子到服务器
+        async function syncMoveToServer(bigIdx, smallIdx) {
+            if (!roomCode) return;
+
+            try {
+                await fetch(API_URL + '?action=make_move', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: `room_code=${roomCode}&player=${playerSymbol}&big_idx=${bigIdx}&small_idx=${smallIdx}`
+                });
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        // 更新限制
+        function updateRestriction(smallIdx) {
+            if (totalMoves >= 1) {
+                const nextBigIdx = smallIdx;
+                const isBigFinished = bigWinners[nextBigIdx] !== null;
+                const isBigFull = bigBoard[nextBigIdx].every(sc => sc.classList.contains('taken'));
+
+                if (!isBigFinished && !isBigFull) {
+                    allowedBigIdx = nextBigIdx;
+                } else {
+                    allowedBigIdx = -1;
+                }
+            } else {
+                allowedBigIdx = -1;
+            }
+        }
+
+        // AI 落子
+        async function aiMove() {
+            if (gameOver) return;
+
+            let move = null;
+
+            // 所有难度都由后端处理
+            try {
+                const response = await fetch(API_URL + '?action=ai_move', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: `board=${JSON.stringify(bigBoard.map(s => s.map(c => c.textContent || '')))}&big_winners=${JSON.stringify(bigWinners)}&allowed_big_idx=${allowedBigIdx}&difficulty=${aiDifficulty}`
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    move = { big_idx: data.big_idx, small_idx: data.small_idx };
+                    bigWinners = data.big_winners;
+                }
+            } catch (e) {
+                console.error(e);
+            }
+
+            // 备用方案
+            if (!move) {
+                if (aiDifficulty === 'easy') {
+                    move = getRandomMove();
+                } else {
+                    move = getBestMove() || getRandomMove();
+                }
+            }
+
+            // 执行 AI 落子
+            const cell = bigBoard[move.big_idx][move.small_idx];
+            cell.textContent = 'O';
+            cell.classList.add('taken', 'o');
+            totalMoves++;
+
+            const smallWinner = checkSmallBoardWinner(move.big_idx);
+            if (smallWinner) {
+                bigWinners[move.big_idx] = smallWinner;
+                const bigCell = document.querySelectorAll('.big-cell')[move.big_idx];
+                bigCell.classList.add('winner-o');
+                updateScores();
+            }
+
+            const allFinished = bigWinners.every(w => w !== null);
+            const bigFull = bigBoard.every(small => small.every(sc => sc.classList.contains('taken')));
+
+            if (allFinished || bigFull) {
+                endGame();
+                return;
+            }
+
+            updateRestriction(move.small_idx);
+
+            currentPlayer = 'X';
+            currentPlayerSpan.textContent = currentPlayer;
+
+            updateBoardState();
+            updateHint();
+        }
+
+        // 获取随机落子
+        function getRandomMove() {
+            const moves = [];
+            const targetBigIdx = allowedBigIdx;
+
+            for (let bigIdx = 0; bigIdx < 9; bigIdx++) {
+                if (bigWinners[bigIdx] !== null) continue;
+                if (targetBigIdx !== -1 && bigIdx !== targetBigIdx) continue;
+
+                const isFull = bigBoard[bigIdx].every(sc => sc.classList.contains('taken'));
+                if (isFull) continue;
+
+                for (let smallIdx = 0; smallIdx < 9; smallIdx++) {
+                    if (!bigBoard[bigIdx][smallIdx].classList.contains('taken')) {
+                        moves.push({ big_idx: bigIdx, small_idx: smallIdx });
+                    }
+                }
+            }
+
+            return moves.length > 0 ? moves[Math.floor(Math.random() * moves.length)] : null;
+        }
+
+        // 本地最优落子（简单版）
+        function getBestMove() {
+            const aiPlayer = 'O';
+            const humanPlayer = 'X';
+            const targetBigIdx = allowedBigIdx;
+
+            // 1. 尝试直接获胜
+            for (const move of getAllValidMoves(targetBigIdx)) {
+                const board = copyBoard();
+                board[move.big_idx][move.small_idx] = aiPlayer;
+                if (checkSmallWin(board, move.big_idx, aiPlayer)) {
+                    return move;
+                }
+            }
+
+            // 2. 阻止对方获胜
+            for (const move of getAllValidMoves(targetBigIdx)) {
+                const board = copyBoard();
+                board[move.big_idx][move.small_idx] = humanPlayer;
+                if (checkSmallWin(board, move.big_idx, humanPlayer)) {
+                    return move;
+                }
+            }
+
+            // 3. 中心位置
+            const centerMoves = getAllValidMoves(targetBigIdx).filter(m => m.small_idx === 4);
+            if (centerMoves.length > 0) {
+                return centerMoves[Math.floor(Math.random() * centerMoves.length)];
+            }
+
+            return getRandomMove();
+        }
+
+        // 本地最优落子（高级版）
+        function getBestMoveLocal() {
+            return getBestMove(); // 简化版，实际高级逻辑在服务器端
+        }
+
+        function getAllValidMoves(targetBigIdx) {
+            const moves = [];
+            for (let bigIdx = 0; bigIdx < 9; bigIdx++) {
+                if (bigWinners[bigIdx] !== null) continue;
+                if (targetBigIdx !== -1 && bigIdx !== targetBigIdx) continue;
+
+                const isFull = bigBoard[bigIdx].every(sc => sc.classList.contains('taken'));
+                if (isFull) continue;
+
+                for (let smallIdx = 0; smallIdx < 9; smallIdx++) {
+                    if (!bigBoard[bigIdx][smallIdx].classList.contains('taken')) {
+                        moves.push({ big_idx: bigIdx, small_idx: smallIdx });
+                    }
+                }
+            }
+            return moves;
+        }
+
+        function copyBoard() {
+            return bigBoard.map(small => small.map(c => c.textContent || ''));
+        }
+
+        function checkSmallWin(board, bigIdx, player) {
+            const cells = board[bigIdx];
+            const wins = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+            return wins.some(p => p.every(i => cells[i] === player));
+        }
+
+        // 检查小棋盘获胜
+        function checkSmallBoardWinner(bigIdx) {
+            const cells = bigBoard[bigIdx].map(c => c.textContent);
+            const winPatterns = [
+                [0, 1, 2], [3, 4, 5], [6, 7, 8],
+                [0, 3, 6], [1, 4, 7], [2, 5, 8],
+                [0, 4, 8], [2, 4, 6]
+            ];
+
+            for (const pattern of winPatterns) {
+                const [a, b, c] = pattern;
+                if (cells[a] && cells[a] === cells[b] && cells[a] === cells[c]) {
+                    return cells[a];
+                }
+            }
+
+            if (cells.every(c => c)) return 'draw';
+            return null;
+        }
+
+        // 更新分数
+        function updateScores() {
+            const xWins = bigWinners.filter(w => w === 'X').length;
+            const oWins = bigWinners.filter(w => w === 'O').length;
+            scoreXSpan.textContent = xWins;
+            scoreOSpan.textContent = oWins;
+        }
+
+        // 游戏结束
+        function endGame(winner) {
+            gameOver = true;
+
+            const xWins = bigWinners.filter(w => w === 'X').length;
+            const oWins = bigWinners.filter(w => w === 'O').length;
+
+            if (winner) {
+                if (winner === 'X') {
+                    currentPlayerSpan.textContent = 'X 获胜!';
+                    currentPlayerSpan.style.color = '#ff6b6b';
+                    hintEl.textContent = `X 赢了 ${xWins} 个小棋盘，O 赢了 ${oWins} 个小棋盘`;
+                } else if (winner === 'O') {
+                    currentPlayerSpan.textContent = 'O 获胜!';
+                    currentPlayerSpan.style.color = '#4facfe';
+                    hintEl.textContent = `O 赢了 ${oWins} 个小棋盘，X 赢了 ${xWins} 个小棋盘`;
+                } else {
+                    currentPlayerSpan.textContent = '平局!';
+                    currentPlayerSpan.style.color = '#fff';
+                    hintEl.textContent = '各赢一半，平局！';
+                }
+            } else {
+                if (xWins > oWins) {
+                    currentPlayerSpan.textContent = 'X 获胜!';
+                    currentPlayerSpan.style.color = '#ff6b6b';
+                    hintEl.textContent = `X 赢了 ${xWins} 个小棋盘，O 赢了 ${oWins} 个小棋盘`;
+                } else if (oWins > xWins) {
+                    currentPlayerSpan.textContent = 'O 获胜!';
+                    currentPlayerSpan.style.color = '#4facfe';
+                    hintEl.textContent = `O 赢了 ${oWins} 个小棋盘，X 赢了 ${xWins} 个小棋盘`;
+                } else {
+                    currentPlayerSpan.textContent = '平局!';
+                    currentPlayerSpan.style.color = '#fff';
+                    hintEl.textContent = '各赢一半，平局！';
+                }
+            }
+
+            document.querySelectorAll('.small-cell').forEach(sc => sc.classList.add('disabled'));
+            document.querySelectorAll('.big-cell').forEach(bc => bc.classList.remove('active'));
+        }
+
+        // 重置游戏
+        function resetGame() {
+            bigWinners = Array(9).fill(null);
+            currentPlayer = 'X';
+            gameOver = false;
+            allowedBigIdx = -1;
+            totalMoves = 0;
+
+            currentPlayerSpan.textContent = 'X';
+            currentPlayerSpan.style.color = '';
+            scoreXSpan.textContent = '0';
+            scoreOSpan.textContent = '0';
+            hintEl.textContent = '先手可随便下棋';
+
+            initBoard();
+            updateHint();
+        }
+    </script>
+</body>
+</html>
